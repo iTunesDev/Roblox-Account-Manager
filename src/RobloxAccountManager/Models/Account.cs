@@ -56,6 +56,8 @@ public class Account : INotifyPropertyChanged
     [JsonIgnore] public Services.GameTarget? LastTarget { get; set; }
     /// <summary>True when the user closed the window on purpose, so auto-rejoin leaves it alone.</summary>
     [JsonIgnore] public bool UserClosed { get; set; }
+    /// <summary>When this app last launched the account; used to match a Roblox window that appears late.</summary>
+    [JsonIgnore] public DateTime? LaunchedAt { get; set; }
     [JsonIgnore] public int RejoinAttempts { get; set; }
     [JsonIgnore] public int NotInGameStrikes { get; set; }
     [JsonIgnore] public DateTime? RejoinAfter { get; set; }
@@ -74,6 +76,14 @@ public class Account : INotifyPropertyChanged
 
     [JsonIgnore]
     public int? RunningPid { get => _runningPid; set { Set(ref _runningPid, value); OnChanged(nameof(StatusText)); OnChanged(nameof(IsRunning)); } }
+
+    // ----- Password vault (stored only inside the DPAPI-encrypted file, like the cookie) -----
+    private string _loginName = "";
+    private string _password = "";
+    /// <summary>What you type to sign in: username, email or phone.</summary>
+    public string LoginName { get => _loginName; set { Set(ref _loginName, value); OnChanged(nameof(HasPassword)); } }
+    public string Password { get => _password; set { Set(ref _password, value); OnChanged(nameof(HasPassword)); } }
+    [JsonIgnore] public bool HasPassword => !string.IsNullOrEmpty(Password);
 
     /// <summary>The .ROBLOSECURITY cookie. Only ever written to disk inside the DPAPI-encrypted store.</summary>
     public string Cookie { get; set; } = "";

@@ -156,6 +156,8 @@ public partial class MainWindow : FluentWindow
         PageGames.Visibility = page == "Games" ? Visibility.Visible : Visibility.Collapsed;
         PagePresets.Visibility = page == "Presets" ? Visibility.Visible : Visibility.Collapsed;
         PageMonitor.Visibility = page == "Monitor" ? Visibility.Visible : Visibility.Collapsed;
+        PageVault.Visibility = page == "Vault" ? Visibility.Visible : Visibility.Collapsed;
+        if (page == "Vault") RefreshVault();
         PageSettings.Visibility = page == "Settings" ? Visibility.Visible : Visibility.Collapsed;
         if (page == "Servers") ServersGame.Text = GameName.Text.Length > 0 ? GameName.Text : (PlaceBox.Text.Length > 0 ? PlaceBox.Text : "No game picked. Set one on the Launch page.");
         if (page == "Launch") UpdateSelectionPanels();
@@ -165,49 +167,79 @@ public partial class MainWindow : FluentWindow
 
     // ---------------------------------------------------------------- timers
 
+    /// <summary>Roblox windows that weren't opened by this app (or that we couldn't match to an account), by process id.</summary>
+    private readonly Dictionary<int, Account> _unlinked = new();
+
     /// <summary>Every few seconds: refresh which clients are alive, live stats, auto-rejoin.</summary>
     private void OnFastTick()
     {
-        double totalCpu = 0, totalRam = 0;
+        var alive = RobloxLauncher.RunningClientsByStart(); // oldest first
+
+        // 1. Accounts whose window closed.
         foreach (var a in _accounts)
+            if (a.RunningPid is int pid && !alive.Contains(pid)) OnClientExited(a);
+
+        // 2. Windows that started late (first launch after a Roblox update can take a while): give each
+        //    unclaimed window to the account that launched longest ago and is still waiting for one.
+        var claimed = _accounts.Where(a => a.RunningPid != null).Select(a => a.RunningPid!.Value).ToHashSet();
+        var waiting = new Queue<Account>(_accounts
+            .Where(a => a.RunningPid == null && !a.UserClosed && a.LaunchedAt is DateTime t && DateTime.Now - t < TimeSpan.FromMinutes(5))
+            .OrderBy(a => a.LaunchedAt));
+        foreach (var pid in alive.Where(p => !claimed.Contains(p)))
         {
-            if (a.RunningPid is int pid)
-            {
-                if (!RobloxLauncher.IsRunning(pid))
-                {
-                    OnClientExited(a);
-                    continue;
-                }
-                var lastCpu = a.LastCpuTime;
-                var lastSample = a.LastCpuSample;
-                if (ProcessStats.TrySample(pid, ref lastCpu, ref lastSample, out var cpu, out var ram))
-                {
-                    a.LastCpuTime = lastCpu;
-                    a.LastCpuSample = lastSample;
-                    a.Cpu = cpu;
-                    a.MemoryMb = ram;
-                    totalCpu += cpu;
-                    totalRam += ram;
-                }
-                a.RaiseUptime();
-                if (_data.Settings.WindowTitles) WindowTools.SetTitle(pid, $"Roblox · {a.Title}");
-                if (!_running.Contains(a)) _running.Add(a);
-            }
-            else if (_running.Contains(a))
+            if (waiting.Count == 0) break;
+            var a = waiting.Dequeue();
+            a.RunningPid = pid;
+            a.StartedAt ??= DateTime.Now;
+            claimed.Add(pid);
+            if (_unlinked.Remove(pid, out var placeholder)) _running.Remove(placeholder);
+            if (a.LowResource) _ = ClientOptimizer.ApplyAsync(pid, _data.Settings.CoresPerClient, _data.Settings.MinimizeLowResource);
+        }
+
+        // 3. Anything still unclaimed is shown as an unlinked window so it can still be monitored, tiled and closed.
+        foreach (var pid in alive.Where(p => !claimed.Contains(p) && !_unlinked.ContainsKey(p)))
+            _unlinked[pid] = new Account { Username = "Roblox window", Alias = "Not opened from this app", RunningPid = pid, StartedAt = RobloxLauncher.StartTime(pid) };
+        foreach (var pid in _unlinked.Keys.Where(p => !alive.Contains(p) || claimed.Contains(p)).ToList())
+        {
+            _running.Remove(_unlinked[pid]);
+            _unlinked.Remove(pid);
+        }
+
+        // 4. Live stats.
+        double totalCpu = 0, totalRam = 0;
+        foreach (var a in _accounts.Concat(_unlinked.Values))
+        {
+            if (a.RunningPid is not int pid)
             {
                 _running.Remove(a);
+                continue;
             }
+            var lastCpu = a.LastCpuTime;
+            var lastSample = a.LastCpuSample;
+            if (ProcessStats.TrySample(pid, ref lastCpu, ref lastSample, out var cpu, out var ram))
+            {
+                a.LastCpuTime = lastCpu;
+                a.LastCpuSample = lastSample;
+                a.Cpu = cpu;
+                a.MemoryMb = ram;
+                totalCpu += cpu;
+                totalRam += ram;
+            }
+            a.RaiseUptime();
+            if (_data.Settings.WindowTitles && !_unlinked.ContainsKey(pid)) WindowTools.SetTitle(pid, $"Roblox · {a.Title}");
+            if (!_running.Contains(a)) _running.Add(a);
         }
 
         _ = AutoRejoinTickAsync();
 
-        var n = RobloxLauncher.CountRunningClients();
+        var n = alive.Count;
         RunningText.Text = $"{n} running";
         UsageText.Text = $"CPU {totalCpu:0}% · RAM {totalRam:N0} MB";
         RunningDot.Opacity = n > 0 ? 1 : 0.3;
         StatRunning.Text = n.ToString();
         StatCpu.Text = $"{totalCpu:0}%";
         StatRam.Text = $"{totalRam:N0} MB";
+        MonitorEmpty.Visibility = _running.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         if (_tray != null) _tray.Text = $"Roblox Account Manager · {n} running";
         UpdateAccountsSummary();
     }

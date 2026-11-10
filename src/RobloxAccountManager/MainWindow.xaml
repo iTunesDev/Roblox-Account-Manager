@@ -68,6 +68,9 @@
                     <RadioButton Style="{StaticResource NavItem}" GroupName="Nav" Checked="OnNav" Tag="Presets">
                         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Flash24" Margin="0,0,12,0" /><TextBlock Text="Presets" /></StackPanel>
                     </RadioButton>
+                    <RadioButton Style="{StaticResource NavItem}" GroupName="Nav" Checked="OnNav" Tag="Vault">
+                        <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Key24" Margin="0,0,12,0" /><TextBlock Text="Vault" /></StackPanel>
+                    </RadioButton>
                     <RadioButton Style="{StaticResource NavItem}" GroupName="Nav" Checked="OnNav" Tag="Monitor">
                         <StackPanel Orientation="Horizontal"><ui:SymbolIcon Symbol="Gauge24" Margin="0,0,12,0" /><TextBlock Text="Monitor" /></StackPanel>
                     </RadioButton>
@@ -119,11 +122,13 @@
                             <DockPanel Grid.Row="0">
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                                     <ui:Button Content="Check logins" Icon="{ui:SymbolIcon ArrowSync24}" Click="OnValidateAll" Margin="0,0,8,0" />
-                                    <ui:Button x:Name="AddButton" Content="Add account" Icon="{ui:SymbolIcon PersonAdd24}" Appearance="Primary" Click="OnAddMenu">
+                                    <ui:Button Content="Create account" Icon="{ui:SymbolIcon PersonAdd24}" Click="OnCreateAccount" Margin="0,0,8,0"
+                                               ToolTip="Make a new Roblox account with a generated username and password" />
+                                    <ui:Button Content="Sign in" Icon="{ui:SymbolIcon Person24}" Appearance="Primary" Click="OnAddLogin" Margin="0,0,8,0"
+                                               ToolTip="Add an account you already have" />
+                                    <ui:Button x:Name="AddButton" Icon="{ui:SymbolIcon MoreHorizontal24}" ToolTip="More ways to add" Click="OnAddMenu">
                                         <ui:Button.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Header="Sign in with Roblox" Click="OnAddLogin" />
-                                                <MenuItem Header="Create a new Roblox account" Click="OnCreateAccount" />
                                                 <MenuItem Header="Paste a cookie" Click="OnAddCookie" />
                                                 <MenuItem Header="Import cookies from a text file" Click="OnImportCookies" />
                                             </ContextMenu>
@@ -145,12 +150,12 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="16" />
-                                    <ColumnDefinition Width="320" />
+                                    <ColumnDefinition Width="340" />
                                 </Grid.ColumnDefinitions>
 
                                 <ListBox x:Name="AccountList" SelectionMode="Extended" Background="Transparent" BorderThickness="0"
                                          HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                         SelectionChanged="OnSelectionChanged">
+                                         ItemContainerStyle="{StaticResource AccountItem}" SelectionChanged="OnSelectionChanged">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Grid Margin="2,6">
@@ -218,7 +223,11 @@
                                     <ui:SymbolIcon Symbol="PersonAdd24" FontSize="44" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
                                     <TextBlock Text="No accounts yet" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,12,0,4"
                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
-                                    <TextBlock Text="Add one with the button at the top right." Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Sign in to an account you have, or create a new one." Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,14,0,0">
+                                        <ui:Button Content="Sign in" Appearance="Primary" Click="OnAddLogin" Margin="0,0,8,0" />
+                                        <ui:Button Content="Create account" Click="OnCreateAccount" />
+                                    </StackPanel>
                                 </StackPanel>
 
                                 <!-- Details -->
@@ -254,6 +263,17 @@
                                                 <TextBlock Text="Minimized, low priority, fewer CPU cores. Good for AFK." Style="{StaticResource Caption}" Margin="0,2,0,0" />
                                                 <ui:ToggleSwitch Content="Auto-rejoin" IsChecked="{Binding AutoRejoin}" Margin="0,12,0,0" Checked="OnDetailsEdited" Unchecked="OnDetailsEdited" />
                                                 <TextBlock Text="Relaunch if the window closes or gets disconnected." Style="{StaticResource Caption}" Margin="0,2,0,0" />
+
+                                                <TextBlock Style="{StaticResource FieldLabel}" Text="Password vault" />
+                                                <ui:TextBox Text="{Binding LoginName, UpdateSourceTrigger=LostFocus}" PlaceholderText="Username, email or phone" Icon="{ui:SymbolIcon Person24}" LostFocus="OnDetailsEdited" />
+                                                <ui:PasswordBox Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" PlaceholderText="Password" Icon="{ui:SymbolIcon Key24}"
+                                                                RevealButtonEnabled="True" Margin="0,6,0,0" LostFocus="OnDetailsEdited" />
+                                                <WrapPanel Margin="0,8,0,0">
+                                                    <ui:Button Content="Copy login" Icon="{ui:SymbolIcon Copy24}" Click="OnCopyLogin" Tag="{Binding}" Margin="0,0,6,6" />
+                                                    <ui:Button Content="Copy password" Icon="{ui:SymbolIcon Copy24}" Click="OnCopyPassword" Tag="{Binding}" Margin="0,0,6,6" />
+                                                    <ui:Button Content="Sign in again" Icon="{ui:SymbolIcon ArrowSync24}" Click="OnSignInAgain" Tag="{Binding}" Margin="0,0,6,6"
+                                                               ToolTip="Refresh this account's login using the saved password" />
+                                                </WrapPanel>
 
                                                 <TextBlock Style="{StaticResource FieldLabel}" Text="Last login check" />
                                                 <TextBlock Text="{Binding LastValidated, StringFormat='{}{0:g}', TargetNullValue='Never'}" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
@@ -477,6 +497,58 @@
                             </StackPanel>
                         </ScrollViewer>
 
+                        <!-- ========== VAULT ========== -->
+                        <Grid x:Name="PageVault" Visibility="Collapsed" Margin="24,20,24,16">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Vault" Style="{StaticResource PageTitle}" />
+                                <TextBlock Text="Saved logins for every account. Encrypted with Windows, readable only by you on this PC. Copied passwords clear from the clipboard after 30 seconds." Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <DockPanel Grid.Row="1" Margin="0,16,0,12">
+                                <ui:Button DockPanel.Dock="Right" Content="Generate a password" Icon="{ui:SymbolIcon Key24}" Click="OnGeneratePassword" Margin="8,0,0,0" />
+                                <ui:TextBox x:Name="VaultSearch" PlaceholderText="Search the vault" Icon="{ui:SymbolIcon Search24}" TextChanged="OnVaultSearch" />
+                            </DockPanel>
+                            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="VaultList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <ui:Card Padding="14,10" Margin="0,0,0,8">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="200" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Border Width="36" Height="36" CornerRadius="18" Background="{DynamicResource ControlFillColorDefaultBrush}">
+                                                        <Border.Clip><EllipseGeometry Center="18,18" RadiusX="18" RadiusY="18" /></Border.Clip>
+                                                        <Image Source="{Binding AvatarUrl, TargetNullValue={x:Null}}" Stretch="UniformToFill" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                                        <TextBlock Text="No password saved" Style="{StaticResource Caption}" Visibility="{Binding HasPassword, Converter={StaticResource HideIf}}" />
+                                                    </StackPanel>
+                                                    <ui:TextBox Grid.Column="2" Text="{Binding LoginName, UpdateSourceTrigger=LostFocus}" PlaceholderText="Login" Margin="0,0,8,0" LostFocus="OnVaultEdited" />
+                                                    <ui:PasswordBox Grid.Column="3" Password="{Binding Password, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" PlaceholderText="Password"
+                                                                    RevealButtonEnabled="True" Margin="0,0,8,0" LostFocus="OnVaultEdited" />
+                                                    <StackPanel Grid.Column="4" Orientation="Horizontal">
+                                                        <ui:Button Icon="{ui:SymbolIcon Person24}" ToolTip="Copy login" Click="OnCopyLogin" Tag="{Binding}" Margin="0,0,6,0" />
+                                                        <ui:Button Icon="{ui:SymbolIcon Copy24}" ToolTip="Copy password" Click="OnCopyPassword" Tag="{Binding}" Margin="0,0,6,0" />
+                                                        <ui:Button Icon="{ui:SymbolIcon ArrowSync24}" ToolTip="Sign in again with these details" Click="OnSignInAgain" Tag="{Binding}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </ui:Card>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+
                         <!-- ========== MONITOR ========== -->
                         <Grid x:Name="PageMonitor" Visibility="Collapsed" Margin="24,20,24,16">
                             <Grid.RowDefinitions>
@@ -530,6 +602,11 @@
                                     <DataGridTextColumn Header="PID" Binding="{Binding RunningPid}" Width="80" />
                                 </DataGrid.Columns>
                             </DataGrid>
+                            <StackPanel x:Name="MonitorEmpty" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <ui:SymbolIcon Symbol="Gauge24" FontSize="40" HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Text="No Roblox windows open" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,10,0,4" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock Text="Launch accounts from the Accounts or Launch page and they'll show up here." Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                            </StackPanel>
                         </Grid>
 
                         <!-- ========== SETTINGS ========== -->

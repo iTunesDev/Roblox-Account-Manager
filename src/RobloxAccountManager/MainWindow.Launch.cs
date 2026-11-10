@@ -77,8 +77,15 @@ public partial class MainWindow
             a.UserClosed = false;
             a.LastTarget = target;
             a.NotInGameStrikes = 0;
+            a.LaunchedAt = DateTime.Now;
             var pid = await _launcher.LaunchAsync(a.Cookie, target);
-            a.RunningPid = pid;
+            // Another tick may already have matched a late window to this account.
+            if (pid != null && _accounts.Any(o => o != a && o.RunningPid == pid)) pid = null;
+            if (pid != null)
+            {
+                if (_unlinked.Remove(pid.Value, out var placeholder)) _running.Remove(placeholder);
+                a.RunningPid = pid;
+            }
             a.StartedAt = DateTime.Now;
             a.LastCpuSample = default;
             if (pid != null && a.LowResource)
@@ -269,9 +276,9 @@ public partial class MainWindow
     /// <summary>Moves the selected running accounts (or all running ones) to a different public server of the same game.</summary>
     private async void OnServerHop(object sender, RoutedEventArgs e)
     {
-        var accounts = MonitorGrid.SelectedItems.Cast<Account>().ToList();
+        var accounts = MonitorGrid.SelectedItems.Cast<Account>().Where(a => _accounts.Contains(a)).ToList();
         if (accounts.Count == 0) accounts = Selected().Where(a => a.IsRunning).ToList();
-        if (accounts.Count == 0) { SetStatus("Select running accounts to move."); return; }
+        if (accounts.Count == 0) { SetStatus("Select running accounts to move. Windows not opened from this app can't be moved."); return; }
 
         await RunBusyAsync(async ct =>
         {
@@ -412,13 +419,17 @@ public partial class MainWindow
     private void OnCloseSelected(object sender, RoutedEventArgs e)
     {
         var list = MonitorGrid.SelectedItems.Cast<Account>().ToList();
-        CloseAccounts(list.Count > 0 ? list : Selected());
+        if (list.Count == 0) list = Selected();
+        if (list.Count == 0) { SetStatus("Select a row in the list first."); return; }
+        CloseAccounts(list);
     }
 
     private void OnCloseAll(object sender, RoutedEventArgs e)
     {
         foreach (var a in _accounts) { a.UserClosed = true; a.RejoinAfter = null; a.RunningPid = null; }
         var n = RobloxLauncher.CloseAllClients();
+        foreach (var u in _unlinked.Values) _running.Remove(u);
+        _unlinked.Clear();
         SetStatus($"Closed {n} Roblox window(s).");
     }
 
@@ -451,16 +462,19 @@ public partial class MainWindow
             if (a.LowResource && a.RunningPid is int pid) ClientOptimizer.TrimMemory(pid);
     }
 
+    /// <summary>Optimizes the rows selected in Monitor, or every low-resource account if none are selected.</summary>
     private void OnOptimizeNow(object sender, RoutedEventArgs e)
     {
+        var picked = MonitorGrid.SelectedItems.Cast<Account>().ToList();
+        var targets = picked.Count > 0 ? picked : _accounts.Where(a => a.LowResource).ToList();
         var n = 0;
-        foreach (var a in _accounts)
+        foreach (var a in targets)
         {
-            if (!a.LowResource || a.RunningPid is not int pid) continue;
+            if (a.RunningPid is not int pid) continue;
             _ = ClientOptimizer.ApplyAsync(pid, _data.Settings.CoresPerClient, _data.Settings.MinimizeLowResource);
             ClientOptimizer.TrimMemory(pid);
             n++;
         }
-        SetStatus(n == 0 ? "No low-resource accounts are running." : $"Optimized {n} running window(s).");
+        SetStatus(n == 0 ? "Nothing to optimize. Select rows in the list, or turn on low-resource mode for an account." : $"Optimized {n} running window(s).");
     }
 }

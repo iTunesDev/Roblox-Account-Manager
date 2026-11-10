@@ -67,14 +67,26 @@ public partial class MainWindow
     private async void OnAddLogin(object sender, RoutedEventArgs e)
     {
         var w = new LoginWindow { Owner = this };
-        if (w.ShowDialog() == true && w.Cookie != null) await AddAccountAsync(w.Cookie);
+        if (w.ShowDialog() == true && w.Cookie != null) await AddFromLoginWindowAsync(w);
+    }
+
+    /// <summary>Adds the signed-in account and stores whatever login details were typed into the vault.</summary>
+    private async Task AddFromLoginWindowAsync(LoginWindow w)
+    {
+        if (!await AddAccountAsync(w.Cookie!)) return;
+        var acc = _accounts.LastOrDefault(a => a.Cookie == w.Cookie);
+        if (acc == null || string.IsNullOrEmpty(w.CapturedPassword)) return;
+        acc.LoginName = string.IsNullOrWhiteSpace(w.CapturedLogin) ? acc.Username : w.CapturedLogin!;
+        acc.Password = w.CapturedPassword!;
+        Save();
+        SetStatus($"Added {acc.Username} and saved the password to your vault.");
     }
 
     /// <summary>Opens Roblox's own sign-up page; the user fills it in (and solves the captcha) themselves.</summary>
     private async void OnCreateAccount(object sender, RoutedEventArgs e)
     {
         var w = new LoginWindow(signUp: true) { Owner = this };
-        if (w.ShowDialog() == true && w.Cookie != null) await AddAccountAsync(w.Cookie);
+        if (w.ShowDialog() == true && w.Cookie != null) await AddFromLoginWindowAsync(w);
     }
 
     private async void OnAddCookie(object sender, RoutedEventArgs e)

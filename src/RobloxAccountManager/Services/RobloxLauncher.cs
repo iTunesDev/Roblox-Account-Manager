@@ -30,7 +30,7 @@ public class RobloxLauncher
 
         Process.Start(new ProcessStartInfo(uri) { UseShellExecute = true });
 
-        var deadline = DateTime.UtcNow + (waitForClient ?? TimeSpan.FromSeconds(45));
+        var deadline = DateTime.UtcNow + (waitForClient ?? TimeSpan.FromSeconds(60));
         while (DateTime.UtcNow < deadline)
         {
             await Task.Delay(1000);
@@ -45,6 +45,28 @@ public class RobloxLauncher
         var set = new HashSet<int>();
         foreach (var p in Process.GetProcessesByName(ClientProcessName)) { set.Add(p.Id); p.Dispose(); }
         return set;
+    }
+
+    /// <summary>Running client process ids, oldest first.</summary>
+    public static List<int> RunningClientsByStart()
+    {
+        var list = new List<(int Pid, DateTime Start)>();
+        foreach (var p in Process.GetProcessesByName(ClientProcessName))
+        {
+            using (p)
+            {
+                DateTime start;
+                try { start = p.StartTime; } catch { start = DateTime.MaxValue; }
+                list.Add((p.Id, start));
+            }
+        }
+        return list.OrderBy(x => x.Start).Select(x => x.Pid).ToList();
+    }
+
+    public static DateTime? StartTime(int pid)
+    {
+        try { using var p = Process.GetProcessById(pid); return p.StartTime; }
+        catch { return null; }
     }
 
     public static int CountRunningClients() => RunningClientIds().Count;

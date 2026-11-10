@@ -45,6 +45,37 @@
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
             </Style>
 
+            <!-- Account list row: subtle hover and selection with an accent bar, instead of the solid blue default -->
+            <Style x:Key="AccountItem" TargetType="ListBoxItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Margin" Value="0,0,0,4" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="Bg" CornerRadius="6" Padding="10,4" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                                <Grid>
+                                    <Border x:Name="Pip" Width="3" CornerRadius="2" HorizontalAlignment="Left" Margin="-10,10,0,10"
+                                            Background="{DynamicResource AccentFillColorDefaultBrush}" Visibility="Collapsed" />
+                                    <ContentPresenter />
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Bg" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                    <Setter TargetName="Bg" Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+                                    <Setter TargetName="Pip" Property="Visibility" Value="Visible" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <!-- Sidebar navigation item -->
             <Style x:Key="NavItem" TargetType="RadioButton">
                 <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
