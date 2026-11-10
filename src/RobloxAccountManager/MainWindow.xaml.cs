@@ -140,6 +140,7 @@ public partial class MainWindow : FluentWindow
     /// <summary>Command line from this launch or forwarded from a second copy (e.g. a preset shortcut).</summary>
     public void HandleArgs(string[] args)
     {
+        if (args.Contains("--exit-for-update")) { ExitApp(); return; }
         if (args.Contains("--show")) ShowFromTray();
         if (SystemIntegration.PresetFromArgs(args) is Guid id) RunPresetById(id);
     }
