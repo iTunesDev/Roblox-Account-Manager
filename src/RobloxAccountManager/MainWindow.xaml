@@ -356,7 +356,8 @@
                                 <ui:Card Padding="16" Margin="0,0,0,12">
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <ComboBox x:Name="QuickGroup" Width="160" Margin="0,0,8,0" ToolTip="Select every account in a group" SelectionChanged="OnQuickGroup" />
+                                            <ComboBox x:Name="QuickGroup" Width="170" Margin="0,0,8,0" ToolTip="Select every account in a group" SelectionChanged="OnQuickGroup"
+                                                      IsEditable="False" Text="Select a group" />
                                             <ui:Button Content="Select all" Click="OnSelectAll" />
                                         </StackPanel>
                                         <StackPanel>

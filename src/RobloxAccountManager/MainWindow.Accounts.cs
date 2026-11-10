@@ -43,6 +43,8 @@ public partial class MainWindow
         GroupEdit.ItemsSource = groups;
         BulkGroup.ItemsSource = groups;
         QuickGroup.ItemsSource = groups;
+        // Only offer "select by group" once there are groups to pick from.
+        QuickGroup.Visibility = groups.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateAccountsSummary()
