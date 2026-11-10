@@ -11,6 +11,10 @@ public static class ClientOptimizer
 {
     [DllImport("user32.dll")] private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
     [DllImport("psapi.dll")] private static extern bool EmptyWorkingSet(IntPtr hProcess);
+    [DllImport("kernel32.dll")] private static extern IntPtr OpenProcess(uint access, bool inherit, int pid);
+    [DllImport("kernel32.dll")] private static extern bool CloseHandle(IntPtr h);
+    // Ask only for the rights each call needs; Roblox refuses "all access" handles.
+    private const uint PROCESS_SET_QUOTA = 0x0100, PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 
     private const int SW_MINIMIZE = 6;
     private static int _nextCore;
@@ -45,12 +49,10 @@ public static class ClientOptimizer
     /// <summary>Asks Windows to page out memory the client isn't actively using. Cheap and safe to repeat.</summary>
     public static void TrimMemory(int pid)
     {
-        try
-        {
-            using var p = Process.GetProcessById(pid);
-            EmptyWorkingSet(p.Handle);
-        }
-        catch { }
+        var h = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+        if (h == IntPtr.Zero) return;
+        try { EmptyWorkingSet(h); }
+        finally { CloseHandle(h); }
     }
 
     /// <summary>Spreads clients round-robin across cores so they don't all pile onto core 0.</summary>
