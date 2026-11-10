@@ -1,0 +1,19 @@
+<ui:FluentWindow x:Class="RobloxAccountManager.Views.CookieWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Add account with cookie" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica" WindowStartupLocation="CenterOwner">
+    <StackPanel>
+        <ui:TitleBar Title="Add account with cookie" ShowMinimize="False" ShowMaximize="False" />
+        <StackPanel Margin="20,4,20,20">
+            <TextBlock Style="{StaticResource Caption}" Margin="0,0,0,10"
+                       Text="Paste the .ROBLOSECURITY cookie for the account. Treat it like a password: anyone who has it can use the account." />
+            <ui:PasswordBox x:Name="CookieBox" PlaceholderText="_|WARNING:-DO-NOT-SHARE-THIS..." />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <ui:Button Content="Cancel" Width="90" Margin="0,0,8,0" IsCancel="True" />
+                <ui:Button Content="Add" Width="90" Appearance="Primary" IsDefault="True" Click="OnAdd" />
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</ui:FluentWindow>
