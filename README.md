@@ -43,11 +43,11 @@ To work out where a server is hosted, the app asks Roblox's matchmaker for the s
 ## Updates
 The app checks this repo's latest GitHub Release when it starts. If a newer version is out, a banner offers a one-click update that swaps the exe and restarts. Roblox windows stay open. You can turn this off, or check by hand, in Settings → Updates.
 
-To ship an update: bump nothing by hand, just tag a commit `vX.Y.Z` and push the tag. CI builds that version and publishes the release.
+To ship an update, bump `<Version>` in `src/RobloxAccountManager/RobloxAccountManager.csproj` and push to `main`. CI builds it and publishes release `v<Version>`.
 
 ## Download
 Every push to `main` builds a ready-to-run `RobloxAccountManager.exe`. You'll find it on the **Actions** tab, under the latest run's *Artifacts*.
-Tagging a commit `v1.0.0` (or similar) also attaches the exe to a GitHub Release.
+The newest version is always on the [Releases page](../../releases/latest).
 
 You need Windows 10 or 11 and the Roblox player installed. Signing in inside the app uses the Microsoft Edge WebView2 Runtime, which is already on most Windows 10 and 11 PCs.
 
