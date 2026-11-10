@@ -70,6 +70,13 @@ public partial class MainWindow
         if (w.ShowDialog() == true && w.Cookie != null) await AddAccountAsync(w.Cookie);
     }
 
+    /// <summary>Opens Roblox's own sign-up page; the user fills it in (and solves the captcha) themselves.</summary>
+    private async void OnCreateAccount(object sender, RoutedEventArgs e)
+    {
+        var w = new LoginWindow(signUp: true) { Owner = this };
+        if (w.ShowDialog() == true && w.Cookie != null) await AddAccountAsync(w.Cookie);
+    }
+
     private async void OnAddCookie(object sender, RoutedEventArgs e)
     {
         var w = new CookieWindow { Owner = this };

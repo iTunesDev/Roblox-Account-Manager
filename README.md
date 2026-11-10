@@ -6,7 +6,7 @@ It launches the normal, unmodified Roblox player. There are no cheats, injection
 ## Features
 
 **Accounts**
-- Add accounts by signing in through the real roblox.com login page, by pasting a cookie, or by importing a text file of cookies.
+- Add accounts by signing in through the real roblox.com login page, by creating a new one on Roblox's own sign-up page, by pasting a cookie, or by importing a text file of cookies.
 - Logins are encrypted with Windows DPAPI and stored only on this PC (`%LOCALAPPDATA%\RobloxAccountManager\accounts.dat`). Passwords are never stored.
 - Nicknames, notes, groups, search and filtering. Avatar, Robux and Premium shown on each account.
 - Account health: logins are re-checked at start-up and every 6 hours. Expired ones are flagged, and you can get a Discord alert for them.

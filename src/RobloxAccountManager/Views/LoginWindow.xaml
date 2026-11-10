@@ -6,11 +6,11 @@
         Title="Sign in to Roblox" Width="540" Height="780" WindowStartupLocation="CenterOwner"
         ExtendsContentIntoTitleBar="True" WindowBackdropType="Mica">
     <DockPanel>
-        <ui:TitleBar DockPanel.Dock="Top" Title="Sign in to Roblox" ShowMinimize="False" />
+        <ui:TitleBar DockPanel.Dock="Top" Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" ShowMinimize="False" />
         <Border DockPanel.Dock="Top" Margin="16,0,16,10" Padding="12" CornerRadius="6" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}">
             <StackPanel Orientation="Horizontal">
                 <ui:SymbolIcon Symbol="ShieldLock24" Margin="0,0,10,0" Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
-                <TextBlock Style="{StaticResource Caption}" Width="440"
+                <TextBlock x:Name="Header" Style="{StaticResource Caption}" Width="440"
                            Text="Sign in as normal. This window closes itself once you're in. Your password is never saved, only the login session, encrypted on this PC." />
             </StackPanel>
         </Border>

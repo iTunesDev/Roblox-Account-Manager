@@ -106,6 +106,7 @@
                                         <ui:Button.ContextMenu>
                                             <ContextMenu>
                                                 <MenuItem Header="Sign in with Roblox" Click="OnAddLogin" />
+                                                <MenuItem Header="Create a new Roblox account" Click="OnCreateAccount" />
                                                 <MenuItem Header="Paste a cookie" Click="OnAddCookie" />
                                                 <MenuItem Header="Import cookies from a text file" Click="OnImportCookies" />
                                             </ContextMenu>

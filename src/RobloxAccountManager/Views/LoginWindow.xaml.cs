@@ -18,8 +18,12 @@ public partial class LoginWindow : Wpf.Ui.Controls.FluentWindow
 
     public string? Cookie { get; private set; }
 
-    public LoginWindow()
+    private readonly bool _signUp;
+
+    /// <param name="signUp">Open Roblox's sign-up page instead of the login page.</param>
+    public LoginWindow(bool signUp = false)
     {
+        _signUp = signUp;
         InitializeComponent();
         _profileDir = Path.Combine(Path.GetTempPath(), "RobloxAccountManager-login-" + Guid.NewGuid().ToString("N"));
         Loaded += OnLoaded;
@@ -34,7 +38,12 @@ public partial class LoginWindow : Wpf.Ui.Controls.FluentWindow
             _env = await CoreWebView2Environment.CreateAsync(userDataFolder: _profileDir);
             await Web.EnsureCoreWebView2Async(_env);
             Web.CoreWebView2.NavigationCompleted += async (_, _) => await CheckCookieAsync();
-            Web.CoreWebView2.Navigate("https://www.roblox.com/login");
+            if (_signUp)
+            {
+                Title = "Create a Roblox account";
+                Header.Text = "Fill in Roblox's sign-up form as normal. When the account is made, it's added to your list and this window closes.";
+            }
+            Web.CoreWebView2.Navigate(_signUp ? "https://www.roblox.com/" : "https://www.roblox.com/login");
             _poll.Start();
         }
         catch (WebView2RuntimeNotFoundException)
