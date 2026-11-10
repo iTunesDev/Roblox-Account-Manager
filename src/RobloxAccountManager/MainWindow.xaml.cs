@@ -100,6 +100,8 @@ public partial class MainWindow : FluentWindow
         StartupBox.IsChecked = s.StartWithWindows;
         TitlesBox.IsChecked = s.WindowTitles;
         LightBox.IsChecked = s.LightTheme;
+        AutoUpdateBox.IsChecked = s.CheckForUpdates;
+        VersionText.Text = $"Version {Updater.CurrentVersion}";
         if (s.LightTheme) ApplicationThemeManager.Apply(ApplicationTheme.Light, WindowBackdropType.Mica, true);
 
         RefreshGroups();
@@ -121,6 +123,9 @@ public partial class MainWindow : FluentWindow
         OnFastTick();
         if (!string.IsNullOrWhiteSpace(PlaceBox.Text)) _ = LookupGameAsync(PlaceBox.Text, quiet: true);
         HandleArgs(_startArgs);
+        Updater.CleanUpOldVersion();
+        if (_startArgs.Contains("--updated")) SetStatus($"Updated to version {Updater.CurrentVersion}.");
+        if (_data.Settings.CheckForUpdates) _ = CheckForUpdateAsync(manual: false);
         await ValidateAsync(_accounts.ToList(), quiet: true);
     }
 
@@ -388,6 +393,7 @@ public partial class MainWindow : FluentWindow
         s.StartWithWindows = StartupBox.IsChecked == true;
         s.WindowTitles = TitlesBox.IsChecked == true;
         s.LightTheme = LightBox.IsChecked == true;
+        s.CheckForUpdates = AutoUpdateBox.IsChecked == true;
         Save();
     }
 

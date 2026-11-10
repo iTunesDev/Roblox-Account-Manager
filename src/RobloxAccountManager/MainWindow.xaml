@@ -91,6 +91,23 @@
                         </DockPanel>
                     </Border>
 
+                    <!-- Update banner -->
+                    <Border x:Name="UpdateBanner" DockPanel.Dock="Top" Visibility="Collapsed" Margin="24,14,24,0" Padding="14,10" CornerRadius="6"
+                            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{DynamicResource AccentFillColorDefaultBrush}" BorderThickness="1">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                                <ui:Button Content="What's new" Click="OnUpdateNotes" Margin="0,0,8,0" />
+                                <ui:Button x:Name="UpdateButton" Content="Update now" Icon="{ui:SymbolIcon ArrowDownload24}" Appearance="Primary" Click="OnInstallUpdate" Margin="0,0,8,0" />
+                                <ui:Button Icon="{ui:SymbolIcon Dismiss24}" ToolTip="Later" Click="OnDismissUpdate" />
+                            </StackPanel>
+                            <ui:SymbolIcon Symbol="ArrowCircleUp24" FontSize="20" Margin="0,0,10,0" Foreground="{DynamicResource AccentFillColorDefaultBrush}" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock x:Name="UpdateTitle" Text="Update available" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                <TextBlock x:Name="UpdateSub" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
                     <Grid>
                         <!-- ========== ACCOUNTS ========== -->
                         <Grid x:Name="PageAccounts" Margin="24,20,24,16">
@@ -585,6 +602,14 @@
                                         </DockPanel>
                                         <ui:ToggleSwitch x:Name="TitlesBox" Content="Show the account name in each Roblox window's title" Margin="0,10,0,0" Checked="OnSettingToggle" Unchecked="OnSettingToggle" />
                                         <ui:ToggleSwitch x:Name="LightBox" Content="Light theme" Margin="0,10,0,0" Checked="OnThemeToggle" Unchecked="OnThemeToggle" />
+                                    </StackPanel>
+                                </ui:CardExpander>
+
+                                <ui:CardExpander Header="Updates" Icon="{ui:SymbolIcon ArrowSync24}" Margin="0,0,0,8">
+                                    <StackPanel>
+                                        <TextBlock x:Name="VersionText" Text="Version 1.0.0" Foreground="{DynamicResource TextFillColorPrimaryBrush}" />
+                                        <ui:ToggleSwitch x:Name="AutoUpdateBox" Content="Check for updates when the app starts" Margin="0,10,0,0" Checked="OnSettingToggle" Unchecked="OnSettingToggle" />
+                                        <ui:Button Content="Check now" Icon="{ui:SymbolIcon ArrowSync24}" Click="OnCheckUpdates" Margin="0,12,0,0" />
                                     </StackPanel>
                                 </ui:CardExpander>
 

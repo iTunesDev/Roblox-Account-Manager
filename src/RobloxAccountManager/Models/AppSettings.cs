@@ -36,6 +36,8 @@ public class AppSettings
     public bool StartWithWindows { get; set; }
     public Guid? StartupPresetId { get; set; }
     public bool WindowTitles { get; set; } = true;
+    public bool CheckForUpdates { get; set; } = true;
+    public string? SkippedVersion { get; set; }
 }
 
 public class Preset

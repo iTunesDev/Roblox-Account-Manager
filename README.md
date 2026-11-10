@@ -40,6 +40,11 @@ Roblox chooses servers near your real connection, and the app can't change where
 What it does is find public servers hosted in the region you choose and send the account there. Ping still depends on your real location.
 To work out where a server is hosted, the app asks Roblox's matchmaker for the server's address (using one of your accounts) and looks that address up on ip-api.com. Only Roblox server addresses are sent.
 
+## Updates
+The app checks this repo's latest GitHub Release when it starts. If a newer version is out, a banner offers a one-click update that swaps the exe and restarts. Roblox windows stay open. You can turn this off, or check by hand, in Settings → Updates.
+
+To ship an update: bump nothing by hand, just tag a commit `vX.Y.Z` and push the tag. CI builds that version and publishes the release.
+
 ## Download
 Every push to `main` builds a ready-to-run `RobloxAccountManager.exe`. You'll find it on the **Actions** tab, under the latest run's *Artifacts*.
 Tagging a commit `v1.0.0` (or similar) also attaches the exe to a GitHub Release.
